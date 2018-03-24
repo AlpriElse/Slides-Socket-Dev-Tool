@@ -5,11 +5,20 @@ var path = require('path');
 var morgan = require('morgan');
 var healthChecker = require('sc-framework-health-check');
 
+const PRESENTER_PORT = 5000;
+
 //  Socket.io Imports to connect to Meteor Presenter View
-var io = require('socket.io').listen(5000);
+var io = require('socket.io').listen(PRESENTER_PORT);
 io.on('connection', (socket) => {
   console.log("Meteor Presenter View Connected: ", socket.client.id);
 });
+
+function updateProgress(data) {
+  io.emit('updateProgress', data);
+}
+function askQuestion(data) {
+  io.emit('askQuestion', data);
+}
 
 class Worker extends SCWorker {
   run() {
@@ -51,10 +60,12 @@ class Worker extends SCWorker {
 
       socket.on('updateProgress', (data) => {
         console.log("student: " + data.student + " slide id: " + data.slideID);
+        updateProgress(data);
       });
 
       socket.on('askQuestion', (data) => {
         console.log("student: " + data.student + " question: " + data.question);
+        askQuestion(data);
       });
 
       socket.on('disconnect', function () {
